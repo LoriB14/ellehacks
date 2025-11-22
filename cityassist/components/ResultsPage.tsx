@@ -6,6 +6,12 @@ import {
   getQuickAnswer,
   generateFallbackAnswer,
 } from "../services/chatService";
+import {
+  fetchAllLiveResources,
+  searchLiveResources,
+  getNearbyResources,
+  LiveResource,
+} from "../services/torontoDataService";
 import MapComponent from "./MapComponent";
 import ResourceCard from "./ResourceCard";
 import EmergencyBanner from "./EmergencyBanner";
@@ -43,10 +49,13 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   };
 
   const [query, setQuery] = useState<string>(queryParam);
-  const [resources, setResources] = useState<Resource[]>(STATIC_RESOURCES);
-  const [summary, setSummary] = useState<string>("Showing all resources.");
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [liveResources, setLiveResources] = useState<LiveResource[]>([]);
+  const [summary, setSummary] = useState<string>(
+    "Loading live Toronto resources..."
+  );
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isMobileMapOpen, setIsMobileMapOpen] = useState<boolean>(false);
   const [chatAnswer, setChatAnswer] = useState<ReturnType<
     typeof getQuickAnswer
@@ -68,6 +77,68 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
 
   const [showEmergencyBanner, setShowEmergencyBanner] = useState(false);
 
+  // Convert LiveResource to Resource format
+  const convertLiveResourceToResource = (
+    liveResource: LiveResource
+  ): Resource => {
+    // Map live resource types to categories
+    const getCategoryFromType = (type: string) => {
+      switch (type) {
+        case "food-bank":
+          return "Food";
+        case "shelter":
+          return "Shelter";
+        case "health":
+          return "Health";
+        case "mental-health":
+          return "Health";
+        case "employment":
+          return "Community";
+        case "housing":
+          return "Shelter";
+        default:
+          return "Community";
+      }
+    };
+
+    return {
+      id: liveResource.id,
+      name: liveResource.name,
+      category: getCategoryFromType(liveResource.type),
+      description: liveResource.services.join(", "),
+      address: liveResource.address,
+      lat: liveResource.coordinates[0],
+      lng: liveResource.coordinates[1],
+      hours: liveResource.hours,
+      phone: liveResource.phone || "",
+      website: liveResource.website || "",
+      source: "Toronto Live Data",
+    };
+  };
+
+  // Load initial live resources
+  useEffect(() => {
+    const loadLiveResources = async () => {
+      try {
+        setLoading(true);
+        const liveData = await fetchAllLiveResources();
+        setLiveResources(liveData);
+        const convertedResources = liveData.map(convertLiveResourceToResource);
+        setResources(convertedResources);
+        setSummary(`Showing ${liveData.length} live Toronto resources`);
+      } catch (error) {
+        console.error("Error loading live resources:", error);
+        // Fallback to static resources
+        setResources(STATIC_RESOURCES);
+        setSummary("Showing fallback resources (live data unavailable)");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLiveResources();
+  }, []);
+
   // Sync local state with URL
   useEffect(() => {
     setQuery(queryParam);
@@ -76,7 +147,66 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
     // Get quick answer for the query
     const answer = getQuickAnswer(queryParam);
     setChatAnswer(answer);
+
+    // If there's a query, perform search with live resources
+    if (queryParam.trim()) {
+      performLiveSearch(queryParam);
+    }
   }, [queryParam]);
+
+  // Search using live Toronto resources
+  const performLiveSearch = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
+
+      setLoading(true);
+      setIsMobileMapOpen(false);
+      setShowEmergencyBanner(isCrisisQuery(searchQuery));
+
+      try {
+        // First try searching live resources
+        const liveResults = await searchLiveResources(undefined, searchQuery);
+
+        if (liveResults.length > 0) {
+          setLiveResources(liveResults);
+          const convertedResources = liveResults.map(
+            convertLiveResourceToResource
+          );
+          setResources(convertedResources);
+          setSummary(
+            `Found ${liveResults.length} live resources matching "${searchQuery}"`
+          );
+          if (convertedResources.length > 0) {
+            setSelectedId(convertedResources[0].id);
+          }
+        } else {
+          // Fallback to AI search if no live results
+          const result: AIResponse = await searchResourcesWithGemini(
+            searchQuery,
+            userLocation.lat,
+            userLocation.lng
+          );
+          setResources(result.resources);
+          setSummary(result.summary + " (Enhanced with AI search)");
+          if (result.resources.length > 0) {
+            setSelectedId(result.resources[0].id);
+          }
+        }
+      } catch (err) {
+        console.error("Error in live search:", err);
+        // Final fallback
+        setSummary(
+          "Sorry, we couldn't process your request right now. Try browsing all resources."
+        );
+        const allLive = await fetchAllLiveResources();
+        const converted = allLive.map(convertLiveResourceToResource);
+        setResources(converted);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userLocation, convertLiveResourceToResource]
+  );
 
   const performSearch = useCallback(
     async (searchQuery: string) => {
@@ -325,7 +455,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
                       darkMode ? "text-gray-200" : "text-blue-900"
                     }`}
                   >
-                    CityAssist AI
+                    6ixAssist AI
                   </h4>
                   <p
                     className={`text-sm leading-relaxed transition-colors duration-300 ${

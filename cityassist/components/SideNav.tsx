@@ -58,7 +58,7 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
       path: "/",
     },
     {
-      name: "Find Resources",
+      name: "6ixAssist Map",
       icon: (
         <svg
           className="w-6 h-6"
@@ -258,13 +258,12 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-3 transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
+                  className="flex items-center gap-3"
                 >
-                  {" "}
-                  <div className="w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden">
+                  <div className="w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden rounded-xl bg-white">
                     <img
                       src="/logo.png"
-                      alt="CityAssist logo"
+                      alt="6ixAssist logo"
                       className="w-8 h-8 object-contain"
                     />
                   </div>
@@ -314,11 +313,11 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={() => navigate("/")}
                   className="flex items-center justify-center w-full transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
                 >
-                  <div className="w-14 h-14 bg-transparent rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden">
+                  <div className="w-12 h-12 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden rounded-xl bg-white">
                     <img
                       src="/logo.png"
-                      alt="CityAssist logo"
-                      className="w-12 h-12 object-contain"
+                      alt="6ixAssist logo"
+                      className="w-10 h-10 object-contain"
                     />
                   </div>
                 </button>

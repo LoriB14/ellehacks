@@ -238,7 +238,7 @@ const SavedPage: React.FC = () => {
               onClick={() => (window.location.hash = "/")}
               className="px-6 py-3 bg-indigo-500 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-medium transition-all duration-300 ease-out hover:shadow-md active:scale-95"
             >
-              Find resources
+              Browse 6ixAssist
             </button>
           </div>
         )}
