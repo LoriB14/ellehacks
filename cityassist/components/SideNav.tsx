@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useContext } from "react";
+import { DarkModeContext } from "../App";
 
 interface SideNavProps {
   currentPath: string;
@@ -7,6 +8,7 @@ interface SideNavProps {
 const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const { darkMode } = useContext(DarkModeContext);
 
   // Update body margin when collapsed state changes
   React.useEffect(() => {
@@ -203,10 +205,16 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-white rounded-xl shadow-lg border-2 border-indigo-200 hover:bg-indigo-50 active:bg-indigo-100 transition-all duration-200 ease-out active:scale-95"
+        className={`fixed top-4 left-4 z-50 md:hidden p-2 rounded-xl shadow-lg border-2 transition-all duration-300 ease-out active:scale-95 ${
+          darkMode
+            ? "bg-gray-800 border-gray-700 hover:bg-gray-700 active:bg-gray-600"
+            : "bg-white border-indigo-200 hover:bg-indigo-50 active:bg-indigo-100"
+        }`}
       >
         <svg
-          className="w-6 h-6 text-gray-700"
+          className={`w-6 h-6 transition-colors duration-300 ${
+            darkMode ? "text-gray-200" : "text-gray-700"
+          }`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -230,13 +238,21 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
 
       {/* Side Navigation */}
       <nav
-        className={`fixed top-0 left-0 h-full bg-white border-r-2 border-indigo-200 shadow-xl z-40 transition-all duration-300 ease-out ${
+        className={`fixed top-0 left-0 h-full border-r-2 shadow-xl z-40 transition-all duration-300 ease-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0 ${isCollapsed ? "w-20" : "w-64"}`}
+        } md:translate-x-0 ${isCollapsed ? "w-20" : "w-64"} ${
+          darkMode
+            ? "bg-gray-900 border-gray-700"
+            : "bg-white border-indigo-200"
+        }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-indigo-100">
+          <div
+            className={`p-6 border-b transition-colors duration-300 ${
+              darkMode ? "border-gray-700" : "border-indigo-100"
+            }`}
+          >
             {!isCollapsed ? (
               <div className="flex items-center justify-between">
                 <button
@@ -249,18 +265,32 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                     </span>
                   </div>
                   <div className="text-left">
-                    <h1 className="text-xl font-semibold text-gray-800">
+                    <h1
+                      className={`text-xl font-semibold transition-colors duration-300 ${
+                        darkMode ? "text-gray-100" : "text-gray-800"
+                      }`}
+                    >
                       6ixAssist
                     </h1>
-                    <p className="text-xs text-gray-500">Find help near you</p>
+                    <p
+                      className={`text-xs transition-colors duration-300 ${
+                        darkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Find help near you
+                    </p>
                   </div>
                 </button>
                 <button
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="hidden md:block p-2 hover:bg-indigo-50 rounded-lg transition-colors flex-shrink-0"
+                  className={`hidden md:block p-2 rounded-lg transition-all duration-300 flex-shrink-0 ${
+                    darkMode ? "hover:bg-gray-800" : "hover:bg-indigo-50"
+                  }`}
                 >
                   <svg
-                    className="w-5 h-5 text-gray-600"
+                    className={`w-5 h-5 transition-colors duration-300 ${
+                      darkMode ? "text-gray-400" : "text-gray-600"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -288,10 +318,14 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                 </button>
                 <button
                   onClick={() => setIsCollapsed(!isCollapsed)}
-                  className="hidden md:block w-full mt-3 p-2 hover:bg-indigo-50 rounded-lg transition-colors"
+                  className={`hidden md:block w-full mt-3 p-2 rounded-lg transition-all duration-300 ${
+                    darkMode ? "hover:bg-gray-800" : "hover:bg-indigo-50"
+                  }`}
                 >
                   <svg
-                    className="w-5 h-5 text-gray-600 mx-auto rotate-180"
+                    className={`w-5 h-5 mx-auto rotate-180 transition-colors duration-300 ${
+                      darkMode ? "text-gray-400" : "text-gray-600"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -317,17 +351,27 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center ${
                     isCollapsed ? "justify-center" : "gap-3"
-                  } px-4 py-3 rounded-xl font-medium transition-all duration-200 ease-out active:scale-95 ${
+                  } px-4 py-3 rounded-xl font-medium transition-all duration-300 ease-out active:scale-95 ${
                     isActive(item.path)
-                      ? "bg-indigo-100 text-indigo-700 shadow-sm"
+                      ? darkMode
+                        ? "bg-indigo-900 text-indigo-300 shadow-sm"
+                        : "bg-indigo-100 text-indigo-700 shadow-sm"
+                      : darkMode
+                      ? "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
                       : "text-gray-600 hover:bg-indigo-50 hover:text-gray-800"
                   }`}
                   title={isCollapsed ? item.name : undefined}
                 >
                   <span
-                    className={
-                      isActive(item.path) ? "text-indigo-600" : "text-gray-500"
-                    }
+                    className={`transition-colors duration-300 ${
+                      isActive(item.path)
+                        ? darkMode
+                          ? "text-indigo-400"
+                          : "text-indigo-600"
+                        : darkMode
+                        ? "text-gray-400"
+                        : "text-gray-500"
+                    }`}
                   >
                     {item.icon}
                   </span>
@@ -338,7 +382,11 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
 
             {/* Divider */}
             <div className="my-4 px-6">
-              <div className="border-t border-indigo-100"></div>
+              <div
+                className={`border-t transition-colors duration-300 ${
+                  darkMode ? "border-gray-700" : "border-indigo-100"
+                }`}
+              ></div>
             </div>
 
             {/* Extra Items */}
@@ -349,10 +397,20 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={item.action}
                   className={`w-full flex items-center ${
                     isCollapsed ? "justify-center" : "gap-3"
-                  } px-4 py-3 rounded-xl font-medium text-gray-600 hover:bg-indigo-50 hover:text-gray-800 transition-all duration-200 ease-out active:scale-95`}
+                  } px-4 py-3 rounded-xl font-medium transition-all duration-300 ease-out active:scale-95 ${
+                    darkMode
+                      ? "text-gray-300 hover:bg-gray-800 hover:text-gray-100"
+                      : "text-gray-600 hover:bg-indigo-50 hover:text-gray-800"
+                  }`}
                   title={isCollapsed ? item.name : undefined}
                 >
-                  <span className="text-gray-500">{item.icon}</span>
+                  <span
+                    className={`transition-colors duration-300 ${
+                      darkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {item.icon}
+                  </span>
                   {!isCollapsed && <span>{item.name}</span>}
                 </button>
               ))}
@@ -361,11 +419,23 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
 
           {/* Footer */}
           {!isCollapsed && (
-            <div className="p-6 border-t border-indigo-100">
-              <div className="bg-rose-50 rounded-xl p-4 border border-rose-200">
+            <div
+              className={`p-6 border-t transition-colors duration-300 ${
+                darkMode ? "border-gray-700" : "border-indigo-100"
+              }`}
+            >
+              <div
+                className={`rounded-xl p-4 border transition-all duration-300 ${
+                  darkMode
+                    ? "bg-rose-950 border-rose-900"
+                    : "bg-rose-50 border-rose-200"
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <svg
-                    className="w-5 h-5 text-rose-600"
+                    className={`w-5 h-5 transition-colors duration-300 ${
+                      darkMode ? "text-rose-400" : "text-rose-600"
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -377,16 +447,24 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                       d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
                     />
                   </svg>
-                  <p className="text-xs font-semibold text-rose-900">
+                  <p
+                    className={`text-xs font-semibold transition-colors duration-300 ${
+                      darkMode ? "text-rose-300" : "text-rose-900"
+                    }`}
+                  >
                     Need urgent help?
                   </p>
                 </div>
-                <p className="text-xs text-rose-700 mb-2">
+                <p
+                  className={`text-xs mb-2 transition-colors duration-300 ${
+                    darkMode ? "text-rose-400" : "text-rose-700"
+                  }`}
+                >
                   Crisis support available 24/7
                 </p>
                 <button
                   onClick={() => navigate("/map?q=emergency crisis help")}
-                  className="w-full py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-lg text-sm font-medium transition-all duration-200 ease-out hover:shadow-md active:scale-95"
+                  className="w-full py-2 bg-rose-600 hover:bg-rose-700 active:bg-rose-800 text-white rounded-lg text-sm font-medium transition-all duration-300 ease-out hover:shadow-md active:scale-95"
                 >
                   Get Help Now
                 </button>

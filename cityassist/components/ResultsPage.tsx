@@ -2,9 +2,14 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Resource, Coordinate, AIResponse } from "../types";
 import { STATIC_RESOURCES } from "../constants";
 import { searchResourcesWithGemini } from "../services/geminiService";
+import {
+  getQuickAnswer,
+  generateFallbackAnswer,
+} from "../services/chatService";
 import MapComponent from "./MapComponent";
 import ResourceCard from "./ResourceCard";
 import EmergencyBanner from "./EmergencyBanner";
+import ChatAnswer from "./ChatAnswer";
 
 interface ResultsPageProps {
   userLocation: Coordinate;
@@ -41,6 +46,9 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMobileMapOpen, setIsMobileMapOpen] = useState<boolean>(false);
+  const [chatAnswer, setChatAnswer] = useState<ReturnType<
+    typeof getQuickAnswer
+  > | null>(null);
 
   // Detect crisis keywords
   const isCrisisQuery = (q: string) => {
@@ -62,6 +70,10 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   useEffect(() => {
     setQuery(queryParam);
     setShowEmergencyBanner(isCrisisQuery(queryParam));
+
+    // Get quick answer for the query
+    const answer = getQuickAnswer(queryParam);
+    setChatAnswer(answer);
   }, [queryParam]);
 
   const performSearch = useCallback(
@@ -71,6 +83,10 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
       setLoading(true);
       setIsMobileMapOpen(false);
       setShowEmergencyBanner(isCrisisQuery(searchQuery));
+
+      // Get quick answer
+      const answer = getQuickAnswer(searchQuery);
+      setChatAnswer(answer);
 
       try {
         const result: AIResponse = await searchResourcesWithGemini(
@@ -92,6 +108,10 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
     },
     [userLocation]
   );
+
+  const handleSuggestedSearch = (suggestedQuery: string) => {
+    navigate(`/map?q=${encodeURIComponent(suggestedQuery)}`);
+  };
 
   // Execute search when URL query changes or on mount
   useEffect(() => {
@@ -224,6 +244,17 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           {/* Emergency Banner */}
           {showEmergencyBanner && <EmergencyBanner />}
+
+          {/* Chat Answer */}
+          {chatAnswer && (
+            <ChatAnswer
+              answer={chatAnswer.answer}
+              suggestedSearches={chatAnswer.suggestedSearches}
+              urgency={chatAnswer.urgency}
+              onSearchClick={handleSuggestedSearch}
+              onClose={() => setChatAnswer(null)}
+            />
+          )}
 
           {/* AI Summary */}
           {summary && (
