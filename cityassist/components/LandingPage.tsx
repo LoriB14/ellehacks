@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { DarkModeContext } from "../App";
+import { fetchTorontoStats, TorontoOpenDataStats } from "../services/torontoDataService";
 
 interface WeatherData {
   temp: number;
@@ -16,11 +17,26 @@ const LandingPage: React.FC = () => {
   const [location, setLocation] = useState("North York Centre");
   const [showPrompts, setShowPrompts] = useState(false);
   const [showHelpPopup, setShowHelpPopup] = useState(false);
+  const [liveStats, setLiveStats] = useState<TorontoOpenDataStats | null>(null);
   const { darkMode, setDarkMode } = useContext(DarkModeContext);
 
   const navigate = (path: string) => {
     window.location.hash = path;
   };
+
+  // Load live Toronto stats
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const stats = await fetchTorontoStats();
+        setLiveStats(stats);
+      } catch (error) {
+        console.error('Error loading Toronto stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   // Get dynamic categories based on weather, time, and day
   const getDynamicCategories = () => {
@@ -381,6 +397,85 @@ const LandingPage: React.FC = () => {
             ))}
           </div>
         </div>
+
+        {/* Live Toronto Stats */}
+        {liveStats && (
+          <div className="mb-16">
+            <h3
+              className={`text-2xl font-semibold mb-6 text-center ${
+                darkMode ? "text-white" : "text-gray-800"
+              }`}
+            >
+              Live Toronto Resources
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+              <div
+                className={`text-center p-4 rounded-xl ${
+                  darkMode
+                    ? "bg-gray-800 border border-gray-700"
+                    : "bg-white border border-indigo-100"
+                }`}
+              >
+                <div className={`text-2xl font-bold ${darkMode ? "text-indigo-400" : "text-indigo-600"}`}>
+                  {liveStats.availableBeds}
+                </div>
+                <div className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  Available Beds
+                </div>
+              </div>
+              <div
+                className={`text-center p-4 rounded-xl ${
+                  darkMode
+                    ? "bg-gray-800 border border-gray-700"
+                    : "bg-white border border-indigo-100"
+                }`}
+              >
+                <div className={`text-2xl font-bold ${darkMode ? "text-green-400" : "text-green-600"}`}>
+                  {liveStats.foodBankVisits}
+                </div>
+                <div className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  Daily Food Bank Visits
+                </div>
+              </div>
+              <div
+                className={`text-center p-4 rounded-xl ${
+                  darkMode
+                    ? "bg-gray-800 border border-gray-700"
+                    : "bg-white border border-indigo-100"
+                }`}
+              >
+                <div className={`text-2xl font-bold ${
+                  (liveStats.shelterOccupancy / liveStats.shelterCapacity) > 0.9
+                    ? (darkMode ? "text-red-400" : "text-red-600")
+                    : (darkMode ? "text-blue-400" : "text-blue-600")
+                }`}>
+                  {Math.round((liveStats.shelterOccupancy / liveStats.shelterCapacity) * 100)}%
+                </div>
+                <div className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  Shelter Occupancy
+                </div>
+              </div>
+              {liveStats.weatherAlert && (
+                <div
+                  className={`text-center p-4 rounded-xl ${
+                    darkMode
+                      ? "bg-orange-950 border border-orange-800"
+                      : "bg-orange-50 border border-orange-200"
+                  }`}
+                >
+                  <div className={`text-xs font-medium ${darkMode ? "text-orange-300" : "text-orange-700"}`}>
+                    ⚠️ {liveStats.weatherAlert}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="text-center mt-2">
+              <span className={`text-xs ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+                Updated: {new Date(liveStats.lastUpdated).toLocaleTimeString()}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Emergency Banner - Centered */}
         <div
