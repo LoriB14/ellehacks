@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
+import SideNav from './SideNav';
+import { Coordinate } from '../types';
 
-const LandingPage: React.FC = () => {
+interface LandingPageProps {
+  locationStatus: 'idle' | 'locating' | 'found' | 'error';
+  setUserLocation: (coord: Coordinate) => void;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({ locationStatus, setUserLocation }) => {
   const [query, setQuery] = useState('');
+  const [isSideNavOpen, setIsSideNavOpen] = useState(false);
 
   const navigate = (path: string) => {
     window.location.hash = path;
@@ -19,83 +27,101 @@ const LandingPage: React.FC = () => {
   };
 
   const handleUseLocation = () => {
-    // Navigate to map with a generic "nearby" intent
     navigate(`/map?q=${encodeURIComponent('essential resources nearby')}`);
   };
 
-  const handleCrisisClick = () => {
-    navigate(`/map?q=${encodeURIComponent('emergency crisis help')}`);
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center h-full px-4 bg-gradient-to-b from-white to-blue-50 overflow-y-auto">
-      <div className="w-full max-w-md text-center space-y-6 py-8">
-        
-        {/* Hero Section */}
-        <div className="space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg shadow-blue-200">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-          </div>
-          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">CityAssist</h1>
-          <p className="text-lg text-slate-600">Find free or low-cost essential resources in Toronto instantly.</p>
-        </div>
+    <div className="h-full bg-slate-50 relative overflow-hidden flex flex-col">
+      {/* Side Nav */}
+      <SideNav 
+        isOpen={isSideNavOpen} 
+        onClose={() => setIsSideNavOpen(false)} 
+        onNavigate={handleCategoryClick}
+      />
 
-        {/* Search Box */}
-        <form onSubmit={handleSearch} className="w-full relative group">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-slate-400 group-focus-within:text-blue-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-          </div>
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="What do you need today? (e.g. Food Bank)"
-            className="w-full pl-11 pr-4 py-4 rounded-xl border border-slate-200 bg-white shadow-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-lg"
-          />
-        </form>
+      {/* Header / Nav Bar */}
+      <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center z-20">
+        <button 
+          onClick={() => setIsSideNavOpen(true)}
+          className="p-2 bg-white/80 backdrop-blur-md rounded-lg shadow-sm hover:bg-white"
+        >
+          <svg className="w-6 h-6 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+        <div className="font-bold text-slate-900 tracking-tight">CityAssist</div>
+        <div className="w-10"></div> {/* Spacer for balance */}
+      </div>
 
-        {/* Emergency Button */}
-        <div className="w-full">
+      {/* Hero Banner */}
+      <div className="w-full h-48 bg-gradient-to-r from-blue-600 to-indigo-600 relative overflow-hidden flex items-center justify-center pt-10 px-4">
+        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]"></div>
+        <div className="relative z-10 text-center text-white">
+          <h2 className="text-2xl font-bold mb-1">Winter Readiness</h2>
+          <p className="text-sm text-blue-100 mb-3">Warming centers are now open across Toronto.</p>
           <button 
-            onClick={handleCrisisClick}
-            className="w-full py-3 px-4 bg-red-50 border border-red-200 text-red-700 font-bold rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 shadow-sm"
+            onClick={() => handleCategoryClick('Warming Center')}
+            className="px-4 py-1.5 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full text-xs font-bold border border-white/40 transition-colors"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-            Immediate Crisis Help
+            Find Warmth →
           </button>
         </div>
+      </div>
 
-        {/* Action Buttons */}
-        <div className="w-full">
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center px-4 -mt-6 z-10">
+        
+        {/* Search Card */}
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-6 space-y-6">
+          <div className="text-center">
+            <h1 className="text-2xl font-extrabold text-slate-900">Find Help, Fast.</h1>
+            <p className="text-slate-500">Free food, shelter, and legal aid nearby.</p>
+          </div>
+
+          <form onSubmit={handleSearch} className="relative group">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="What do you need? (e.g. Legal)"
+              className="w-full pl-4 pr-4 py-4 rounded-xl border border-slate-200 bg-slate-50 shadow-inner focus:ring-4 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-lg"
+            />
+            <button type="submit" className="absolute right-2 top-2 bottom-2 bg-blue-600 text-white p-2.5 rounded-lg shadow-sm hover:bg-blue-700 transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </button>
+          </form>
+
           <button 
             onClick={handleUseLocation}
-            className="w-full py-3 px-4 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3 bg-blue-50 text-blue-600 font-bold rounded-xl hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
           >
-            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            Use my current location
+             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+             Use My Location
           </button>
         </div>
 
-        {/* Categories */}
-        <div className="space-y-3 pb-8">
-          <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Quick Access</p>
-          <div className="flex flex-wrap justify-center gap-2">
-            {['Food Bank', 'Shelter', 'Legal Help', 'Health', 'Warming Center', 'Free Meals'].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => handleCategoryClick(cat)}
-                className="px-4 py-2 bg-white border border-slate-200 rounded-full text-slate-600 text-sm font-medium hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
-              >
-                {cat}
-              </button>
-            ))}
-          </div>
+        {/* Quick Categories */}
+        <div className="w-full max-w-md mt-8">
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Quick Access</h3>
+            <div className="grid grid-cols-3 gap-3">
+                {[
+                    { label: 'Food', icon: '🍎' },
+                    { label: 'Shelter', icon: '🏠' },
+                    { label: 'Legal', icon: '⚖️' },
+                    { label: 'Health', icon: '🩺' },
+                    { label: 'Crisis', icon: '🚨' },
+                    { label: 'Meals', icon: '🍲' },
+                ].map(cat => (
+                    <button
+                        key={cat.label}
+                        onClick={() => handleCategoryClick(cat.label)}
+                        className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl hover:border-blue-300 hover:shadow-md transition-all gap-1"
+                    >
+                        <span className="text-2xl">{cat.icon}</span>
+                        <span className="text-xs font-medium text-slate-600">{cat.label}</span>
+                    </button>
+                ))}
+            </div>
         </div>
 
-      </div>
-      
-      <div className="absolute bottom-6 text-slate-400 text-xs">
-        CityAssist MVP • Toronto
       </div>
     </div>
   );

@@ -7,40 +7,53 @@ interface MapComponentProps {
   center: Coordinate;
   selectedId?: string;
   onSelectResource: (id: string) => void;
+  onBoundsChange?: (bounds: { north: number, south: number, east: number, west: number }) => void;
 }
 
-const MapComponent: React.FC<MapComponentProps> = ({ resources, center, selectedId, onSelectResource }) => {
+const MapComponent: React.FC<MapComponentProps> = React.memo(({ resources, center, selectedId, onSelectResource, onBoundsChange }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [id: string]: L.Marker }>({});
+  const lastCenterRef = useRef<Coordinate>(center);
 
   // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current) return;
+    if (mapInstanceRef.current) return;
 
-    // Check if map already exists
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.setView([center.lat, center.lng]);
-      return;
-    }
-
-    const map = L.map(mapContainerRef.current).setView([center.lat, center.lng], 13);
+    const map = L.map(mapContainerRef.current, {
+        zoomControl: false,
+        attributionControl: false
+    }).setView([center.lat, center.lng], 13);
 
     L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains: 'abcd',
       maxZoom: 20
     }).addTo(map);
 
-    // Custom User Icon
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    // User Marker
     const userIcon = L.divIcon({
       className: 'custom-div-icon',
       html: "<div style='background-color: #2563eb; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);'></div>",
       iconSize: [20, 20],
       iconAnchor: [10, 10]
     });
-
     L.marker([center.lat, center.lng], { icon: userIcon }).addTo(map).bindPopup("You are here");
+
+    // Event Listeners for Auto-Discovery
+    if (onBoundsChange) {
+        map.on('moveend', () => {
+            const b = map.getBounds();
+            onBoundsChange({
+                north: b.getNorth(),
+                south: b.getSouth(),
+                east: b.getEast(),
+                west: b.getWest()
+            });
+        });
+    }
 
     mapInstanceRef.current = map;
 
@@ -52,33 +65,39 @@ const MapComponent: React.FC<MapComponentProps> = ({ resources, center, selected
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); 
-  // We only want to init once. Updates are handled below.
 
   // Update Center
   useEffect(() => {
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.flyTo([center.lat, center.lng], 13);
-      // Update user marker position (assuming the first marker added is user)
-      // Simplification for MVP: Just re-rendering logic is complex without React-Leaflet, 
-      // so we focus on resource markers updating.
+    if (!mapInstanceRef.current) return;
+    
+    const dist = Math.sqrt(
+        Math.pow(center.lat - lastCenterRef.current.lat, 2) + 
+        Math.pow(center.lng - lastCenterRef.current.lng, 2)
+    );
+
+    if (dist > 0.0001) {
+        mapInstanceRef.current.setView([center.lat, center.lng], 13);
+        lastCenterRef.current = center;
     }
-  }, [center]);
+  }, [center.lat, center.lng]);
 
   // Update Markers
   useEffect(() => {
     if (!mapInstanceRef.current) return;
-
     const map = mapInstanceRef.current;
 
-    // Clear existing markers
     Object.values(markersRef.current).forEach((marker) => (marker as L.Marker).remove());
     markersRef.current = {};
 
-    // Add new markers
     resources.forEach(res => {
       const isSelected = res.id === selectedId;
-      
-      const color = isSelected ? '#f59e0b' : '#ef4444';
+      // Discovered resources are Purple. Emergency Red. Selected Amber. Default Blue.
+      let color = '#3b82f6';
+      if (res.isEmergency) color = '#ef4444';
+      else if (res.category === 'discovered') color = '#a855f7';
+      if (isSelected) color = '#f59e0b';
+
+      const zIndex = isSelected ? 1000 : 1;
       const size = isSelected ? 40 : 30;
 
       const customIcon = L.divIcon({
@@ -89,7 +108,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ resources, center, selected
         popupAnchor: [0, -size]
       });
 
-      const marker = L.marker([res.lat, res.lng], { icon: customIcon })
+      const marker = L.marker([res.lat, res.lng], { icon: customIcon, zIndexOffset: zIndex })
         .addTo(map)
         .bindPopup(`<b>${res.name}</b><br/>${res.category}`);
       
@@ -97,15 +116,12 @@ const MapComponent: React.FC<MapComponentProps> = ({ resources, center, selected
         onSelectResource(res.id);
       });
 
-      if (isSelected) {
-        marker.openPopup();
-      }
-
+      if (isSelected) marker.openPopup();
       markersRef.current[res.id] = marker;
     });
   }, [resources, selectedId, onSelectResource]);
 
   return <div ref={mapContainerRef} className="w-full h-full z-0" />;
-};
+});
 
 export default MapComponent;

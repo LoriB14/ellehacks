@@ -43,6 +43,41 @@ export const STATIC_RESOURCES: Resource[] = [
     isEmergency: true
   },
 
+  // LEGAL RESOURCES (Requested)
+  {
+    id: "l1",
+    name: "Parkdale Community Legal Services",
+    category: "legal",
+    lat: 43.6404,
+    lng: -79.4388,
+    address: "1266 Queen St W, Toronto",
+    hours: "Mon-Fri 9 AM - 5 PM",
+    description: "Free legal advice for low-income residents regarding housing and immigration.",
+    phone: "416-531-2411"
+  },
+  {
+    id: "l2",
+    name: "Downtown Legal Services",
+    category: "legal",
+    lat: 43.6631,
+    lng: -79.3957,
+    address: "655 Spadina Ave, Toronto",
+    hours: "Mon-Fri 9 AM - 5 PM",
+    description: "U of T operated legal clinic. Refugee and tenant law assistance.",
+    phone: "416-934-4535"
+  },
+  {
+    id: "l3",
+    name: "Rexdale Community Legal Clinic",
+    category: "legal",
+    lat: 43.7408,
+    lng: -79.5786,
+    address: "21 Panorama Ct, Etobicoke",
+    hours: "Mon-Fri 9:30 AM - 4:30 PM",
+    description: "Legal help for tenancy, WSIB, and social assistance matters.",
+    phone: "416-741-5201"
+  },
+
   // STANDARD RESOURCES
   {
     id: "1",
@@ -77,17 +112,6 @@ export const STATIC_RESOURCES: Resource[] = [
     description: "Community centre serving LGBTQ2S communities with counseling, meals, and legal clinics.",
     website: "the519.org",
     source: "Toronto Open Data"
-  },
-  {
-    id: "4",
-    name: "Parkdale Community Legal Services",
-    category: "legal",
-    lat: 43.6404,
-    lng: -79.4388,
-    address: "1266 Queen St W, Toronto",
-    hours: "Mon-Fri 9 AM - 5 PM",
-    description: "Free legal advice for low-income residents regarding housing and immigration.",
-    phone: "416-531-2411"
   },
   {
     id: "5",

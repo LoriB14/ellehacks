@@ -38,12 +38,14 @@ export const searchResourcesWithGemini = async (
     - Select the best matching resources based on distance and relevance to the query (e.g. if user asks for 'overdose', prioritize 'health' or 'crisis' resources)
     - Produce a ranked list
     - Write a clear, supportive summary (2–4 sentences)
+    - EXTRACT ELIGIBILITY TIPS: Create a list of 3-4 short, punchy bullet points explaining "What to know" (e.g., "No ID required", "Bring a bag", "Open to all ages", "Intake closes at 4PM"). Simplify complex rules into simple English.
     - Never hallucinate new locations — only use the provided dataset
 
     CRITICAL: Return ONLY valid JSON. Do not wrap it in markdown code blocks.
     Format:
     {
       "summary": "...",
+      "tips": ["Tip 1", "Tip 2", "Tip 3"],
       "resources": [
         {
           "id": "...",
@@ -63,7 +65,7 @@ export const searchResourcesWithGemini = async (
     Available resources:
     ${resourceDataString}
 
-    Please return the ranked list and summary as specified. Return strictly valid JSON.
+    Please return the ranked list, summary, and tips as specified. Return strictly valid JSON.
     `;
 
     // IMPORTANT: Removing responseMimeType: "application/json" to avoid browser-side RPC serialization errors.
@@ -107,6 +109,7 @@ export const searchResourcesWithGemini = async (
 
     return {
       summary: parsed.summary,
+      tips: parsed.tips || [],
       resources: matchedResources
     };
 
@@ -120,6 +123,7 @@ export const searchResourcesWithGemini = async (
     );
     return {
       summary: "We're experiencing heavy traffic. Here are some relevant resources based on keywords.",
+      tips: ["Check hours before visiting", "Bring identification just in case"],
       resources: fallback.length > 0 ? fallback : STATIC_RESOURCES.slice(0, 3)
     };
   }
