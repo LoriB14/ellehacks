@@ -179,8 +179,8 @@ const App: React.FC = () => {
 
           <div className="flex-1 overflow-hidden">
             {isMap ? (
-              <ResultsPage userLocation={userLocation} />
-            ) : isCommunity ? (
+                <ResultsPage userLocation={userLocation} setUserLocation={setUserLocation} />
+              ) : isCommunity ? (
               <CommunityPage />
             ) : isSaved ? (
               <SavedPage />

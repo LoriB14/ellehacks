@@ -6,16 +6,17 @@ import {
   getQuickAnswer,
   generateFallbackAnswer,
 } from "../services/chatService";
-import MapComponent from "./MapComponent";
+import GoogleMapComponent from "./GoogleMapComponent";
 import ResourceCard from "./ResourceCard";
 import EmergencyBanner from "./EmergencyBanner";
 import ChatAnswer from "./ChatAnswer";
 
 interface ResultsPageProps {
   userLocation: Coordinate;
+  setUserLocation?: (c: Coordinate) => void;
 }
 
-const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
+const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation, setUserLocation }) => {
   // Manual query parsing from hash
   const getQueryFromHash = () => {
     const hash = window.location.hash;
@@ -49,6 +50,14 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   const [chatAnswer, setChatAnswer] = useState<ReturnType<
     typeof getQuickAnswer
   > | null>(null);
+  const [showLocationInput, setShowLocationInput] = useState(false);
+  const [manualLat, setManualLat] = useState(String(userLocation.lat || ""));
+  const [manualLng, setManualLng] = useState(String(userLocation.lng || ""));
+
+  useEffect(() => {
+    setManualLat(String(userLocation.lat || ""));
+    setManualLng(String(userLocation.lng || ""));
+  }, [userLocation]);
 
   // Detect crisis keywords
   const isCrisisQuery = (q: string) => {
@@ -133,6 +142,29 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
 
   const handleBack = () => {
     navigate("/");
+  };
+
+  const handlePlacesFound = (placeResources: Resource[], summ: string) => {
+    if (placeResources && placeResources.length > 0) {
+      setResources(placeResources);
+      setSummary(summ);
+      setSelectedId(placeResources[0].id);
+    } else {
+      // no places found — update summary but keep other results
+      setSummary(summ);
+    }
+  };
+
+  const handleSetManualLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    const lat = parseFloat(manualLat);
+    const lng = parseFloat(manualLng);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      if (setUserLocation) {
+        setUserLocation({ lat, lng });
+      }
+      setShowLocationInput(false);
+    }
   };
 
   return (
@@ -226,6 +258,36 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
             </button>
           </form>
 
+          {/* Manual location setter - in case geolocation is denied */}
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              onClick={() => setShowLocationInput((s) => !s)}
+              className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+            >
+              {showLocationInput ? "Hide location" : "Set my location"}
+            </button>
+
+            {showLocationInput && (
+              <form onSubmit={handleSetManualLocation} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={manualLat}
+                  onChange={(e) => setManualLat(e.target.value)}
+                  placeholder="lat"
+                  className="w-24 px-2 py-1 rounded-md border text-sm"
+                />
+                <input
+                  type="text"
+                  value={manualLng}
+                  onChange={(e) => setManualLng(e.target.value)}
+                  placeholder="lng"
+                  className="w-24 px-2 py-1 rounded-md border text-sm"
+                />
+                <button className="px-3 py-1 rounded-md bg-indigo-500 text-white text-sm">Save</button>
+              </form>
+            )}
+          </div>
+
           {/* Quick Filters */}
           <div className="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
             {["Food", "Shelter", "Health", "Legal"].map((cat) => (
@@ -311,11 +373,13 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
           isMobileMapOpen ? "block" : "hidden md:block"
         }`}
       >
-        <MapComponent
+        <GoogleMapComponent
           resources={resources}
           center={userLocation}
           selectedId={selectedId}
           onSelectResource={setSelectedId}
+          query={queryParam}
+          onPlacesFound={handlePlacesFound}
         />
 
         {/* Mobile Map Controls */}
