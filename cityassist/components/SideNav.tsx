@@ -258,11 +258,8 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                 <button
                   onClick={() => navigate("/")}
                   className="flex items-center gap-3 transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
-                >
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out">
-                    <span className="text-white font-bold text-xl transition-all duration-300 ease-out">
-                      6
-                    </span>
+                >                  <div className="w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden">
+                    <img src="/logo.png" alt="CityAssist logo" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="text-left">
                     <h1
@@ -310,10 +307,8 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={() => navigate("/")}
                   className="flex items-center justify-center w-full transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out">
-                    <span className="text-white font-bold text-2xl transition-all duration-300 ease-out">
-                      6
-                    </span>
+                  <div className="w-14 h-14 bg-transparent rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden">
+                    <img src="/logo.png" alt="CityAssist logo" className="w-12 h-12 object-contain" />
                   </div>
                 </button>
                 <button
