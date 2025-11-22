@@ -28,7 +28,7 @@ const EventsPage: React.FC = () => {
       title: 'Winter Clothing Giveaway',
       date: 'Today',
       time: '10:00 AM - 3:00 PM',
-      location: 'St. Mary\'s Church, 456 Oak Ave',
+      location: 'St. Mary\'s Church, 588 Adelaide St W',
       category: 'products',
       description: 'Free warm coats, boots, gloves, and winter essentials. All sizes available.'
     },
@@ -46,7 +46,7 @@ const EventsPage: React.FC = () => {
       title: 'Community Meal',
       date: 'This Week',
       time: 'Daily 6:00 PM',
-      location: 'Hope Kitchen, 789 Elm St',
+      location: 'Feed it Forward, 2770 Dundas St W',
       category: 'food',
       description: 'Hot meals served every evening. Everyone welcome, no questions asked.'
     },

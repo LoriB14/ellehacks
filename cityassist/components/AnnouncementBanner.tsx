@@ -22,7 +22,7 @@ const AnnouncementBanner: React.FC = () => {
     // Latest announcement (in a real app, this would come from an API)
     const latestAnnouncement: Announcement = {
       id: 'nov-22-2025',
-      message: '🔥 New warming center opening today at 456 Oak Ave - Open 24/7 through winter',
+      message: '🔥 New warming center opening today at 349 George St - Open 24/7 through winter',
       type: 'urgent',
       link: '#/announcements'
     };
