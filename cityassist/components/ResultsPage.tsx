@@ -1,12 +1,10 @@
-
-"use client";
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Resource, Coordinate, AIResponse } from '../types';
 import { STATIC_RESOURCES } from '../constants';
 import { searchResourcesWithGemini } from '../services/geminiService';
 import MapComponent from './MapComponent';
 import ResourceCard from './ResourceCard';
+import EmergencyBanner from './EmergencyBanner';
 
 interface ResultsPageProps {
   userLocation: Coordinate;
@@ -43,10 +41,19 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined);
   const [loading, setLoading] = useState<boolean>(false);
   const [isMobileMapOpen, setIsMobileMapOpen] = useState<boolean>(false);
+  
+  // Detect crisis keywords
+  const isCrisisQuery = (q: string) => {
+    const lower = q.toLowerCase();
+    return lower.includes('suicide') || lower.includes('kill') || lower.includes('died') || lower.includes('overdose') || lower.includes('emergency') || lower.includes('crisis') || lower.includes('help me');
+  };
+
+  const [showEmergencyBanner, setShowEmergencyBanner] = useState(false);
 
   // Sync local state with URL
   useEffect(() => {
     setQuery(queryParam);
+    setShowEmergencyBanner(isCrisisQuery(queryParam));
   }, [queryParam]);
 
   const performSearch = useCallback(async (searchQuery: string) => {
@@ -54,6 +61,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
 
     setLoading(true);
     setIsMobileMapOpen(false);
+    setShowEmergencyBanner(isCrisisQuery(searchQuery));
     
     try {
       const result: AIResponse = await searchResourcesWithGemini(searchQuery, userLocation.lat, userLocation.lng);
@@ -148,6 +156,9 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
         {/* Results List */}
         <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
           
+          {/* Emergency Banner */}
+          {showEmergencyBanner && <EmergencyBanner />}
+
           {/* AI Summary */}
           {summary && (
             <div className="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-xl border border-blue-100 animate-fade-in">

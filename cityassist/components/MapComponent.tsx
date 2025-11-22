@@ -1,5 +1,3 @@
-"use client";
-
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { Resource, Coordinate } from '../types';

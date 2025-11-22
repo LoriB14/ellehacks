@@ -1,6 +1,3 @@
-
-"use client";
-
 import React, { useState } from 'react';
 
 const LandingPage: React.FC = () => {
@@ -26,9 +23,13 @@ const LandingPage: React.FC = () => {
     navigate(`/map?q=${encodeURIComponent('essential resources nearby')}`);
   };
 
+  const handleCrisisClick = () => {
+    navigate(`/map?q=${encodeURIComponent('emergency crisis help')}`);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center h-full px-4 bg-gradient-to-b from-white to-blue-50">
-      <div className="w-full max-w-md text-center space-y-8">
+    <div className="flex flex-col items-center justify-center h-full px-4 bg-gradient-to-b from-white to-blue-50 overflow-y-auto">
+      <div className="w-full max-w-md text-center space-y-6 py-8">
         
         {/* Hero Section */}
         <div className="space-y-2">
@@ -53,6 +54,17 @@ const LandingPage: React.FC = () => {
           />
         </form>
 
+        {/* Emergency Button */}
+        <div className="w-full">
+          <button 
+            onClick={handleCrisisClick}
+            className="w-full py-3 px-4 bg-red-50 border border-red-200 text-red-700 font-bold rounded-xl hover:bg-red-100 transition-colors flex items-center justify-center gap-2 shadow-sm"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            Immediate Crisis Help
+          </button>
+        </div>
+
         {/* Action Buttons */}
         <div className="w-full">
           <button 
@@ -65,7 +77,7 @@ const LandingPage: React.FC = () => {
         </div>
 
         {/* Categories */}
-        <div className="space-y-3">
+        <div className="space-y-3 pb-8">
           <p className="text-sm font-semibold text-slate-400 uppercase tracking-wider">Quick Access</p>
           <div className="flex flex-wrap justify-center gap-2">
             {['Food Bank', 'Shelter', 'Legal Help', 'Health', 'Warming Center', 'Free Meals'].map((cat) => (
