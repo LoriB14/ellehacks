@@ -617,7 +617,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
               onClick={handleCrisisClick}
               className="w-full mt-4 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium transition-all duration-300 active:scale-95"
             >
-              Find More Resources
+              Explore 6ixAssist
             </button>
           </div>
         </div>

@@ -26,7 +26,7 @@ export const searchResourcesWithGemini = async (
     })));
 
     const systemPrompt = `
-    You are CityAssist, an AI designed to help users in Ontario find free or low-cost essential community resources such as food banks, shelters, community centers, legal clinics, and warming centres.
+    You are 6ixAssist, an AI designed to help users in Toronto find free or low-cost essential community resources such as food banks, shelters, community centers, legal clinics, and warming centres.
 
     You receive:
     1. A user request in plain language
@@ -128,7 +128,7 @@ export const searchResourcesWithGemini = async (
 export const explainEligibility = async (resourceName: string, eligibilityText: string): Promise<string> => {
   try {
     const systemPrompt = `
-    You are CityAssist, a helpful AI that explains eligibility requirements for community resources in simple, clear language.
+    You are 6ixAssist, a helpful AI that explains eligibility requirements for community resources in simple, clear language.
     
     Break down complex eligibility requirements into easy-to-understand bullet points.
     Be warm, supportive, and concise.

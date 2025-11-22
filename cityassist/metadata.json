@@ -1,5 +1,5 @@
 {
-  "name": "CityAssist",
+  "name": "6ixAssist",
   "description": "A lightweight AI-powered tool helping Toronto residents find free or low-cost essential services.",
   "requestFramePermissions": [
     "geolocation"

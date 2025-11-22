@@ -58,7 +58,7 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
       path: "/",
     },
     {
-      name: "Find Resources",
+      name: "6ixAssist Map",
       icon: (
         <svg
           className="w-6 h-6"
@@ -260,10 +260,8 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={() => navigate("/")}
                   className="flex items-center gap-3"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out">
-                    <span className="text-white font-bold text-xl transition-all duration-300 ease-out">
-                      6
-                    </span>
+                  <div className="w-10 h-10 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden rounded-xl bg-white">
+                    <img src="/logo.png" alt="6ixAssist logo" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="text-left">
                     <h1
@@ -311,10 +309,8 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
                   onClick={() => navigate("/")}
                   className="flex items-center justify-center w-full transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out">
-                    <span className="text-white font-bold text-2xl transition-all duration-300 ease-out">
-                      6
-                    </span>
+                  <div className="w-12 h-12 flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out overflow-hidden rounded-xl bg-white">
+                    <img src="/logo.png" alt="6ixAssist logo" className="w-10 h-10 object-contain" />
                   </div>
                 </button>
                 <button

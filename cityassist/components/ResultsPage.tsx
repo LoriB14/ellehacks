@@ -419,7 +419,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
                   <h4 className={`text-sm font-bold mb-1 transition-colors duration-300 ${
                     darkMode ? "text-gray-200" : "text-blue-900"
                   }`}>
-                    CityAssist AI
+                    6ixAssist AI
                   </h4>
                   <p className={`text-sm leading-relaxed transition-colors duration-300 ${
                     darkMode ? "text-gray-300" : "text-blue-800"
