@@ -14,9 +14,10 @@ import { DarkModeContext } from "../App";
 
 interface ResultsPageProps {
   userLocation: Coordinate;
+  setUserLocation?: (c: Coordinate) => void;
 }
 
-const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
+const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation, setUserLocation }) => {
   const { darkMode } = useContext(DarkModeContext);
   // Manual query parsing from hash
   const getQueryFromHash = () => {
@@ -51,6 +52,8 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   const [chatAnswer, setChatAnswer] = useState<ReturnType<
     typeof getQuickAnswer
   > | null>(null);
+  const [showLocationInput, setShowLocationInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
 
   // Detect crisis keywords
   const isCrisisQuery = (q: string) => {
@@ -78,6 +81,30 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
     setChatAnswer(answer);
   }, [queryParam]);
 
+  const handleSetManualLocation = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualAddress.trim()) return;
+
+    // Simple manual coordinate parsing if user enters "lat, lng"
+    // Since we removed Google Geocoding, we can't easily convert address to coords client-side without an API key.
+    // For now, we'll just alert the user or try to parse coordinates.
+    const parts = manualAddress.split(",");
+    if (parts.length === 2) {
+      const lat = parseFloat(parts[0].trim());
+      const lng = parseFloat(parts[1].trim());
+      if (!isNaN(lat) && !isNaN(lng)) {
+        if (setUserLocation) {
+          setUserLocation({ lat, lng });
+        }
+        setShowLocationInput(false);
+        setManualAddress("");
+        return;
+      }
+    }
+    
+    alert("Please enter coordinates in 'lat, lng' format (e.g. 43.6532, -79.3832). Address lookup is currently disabled.");
+  };
+
   const performSearch = useCallback(
     async (searchQuery: string) => {
       if (!searchQuery.trim()) return;
@@ -90,6 +117,53 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
       const answer = getQuickAnswer(searchQuery);
       setChatAnswer(answer);
 
+      // HARDCODED MODE: Filter local STATIC_RESOURCES instead of calling external APIs
+      // This ensures accurate, curated data is shown as requested.
+      const lowerQuery = searchQuery.toLowerCase();
+      
+      // Simple keyword mapping for better natural language support
+      const keywords: Record<string, string[]> = {
+        shelter: ["sleep", "bed", "homeless", "night", "stay", "housing", "shelter"],
+        food: ["eat", "hungry", "meal", "groceries", "food", "bank"],
+        health: ["sick", "doctor", "medical", "hurt", "pain", "clinic", "hospital", "health"],
+        legal: ["lawyer", "court", "legal", "rights", "eviction"],
+        crisis: ["suicide", "help", "emergency", "danger", "safe", "crisis"],
+        community: ["library", "internet", "wifi", "community", "support"]
+      };
+
+      // Determine target categories based on query
+      const targetCategories = Object.entries(keywords)
+        .filter(([_, words]) => words.some(w => lowerQuery.includes(w)))
+        .map(([cat]) => cat);
+
+      const filtered = STATIC_RESOURCES.filter(r => {
+        // 1. Direct match
+        if (r.name.toLowerCase().includes(lowerQuery) || 
+            r.category.toLowerCase().includes(lowerQuery) ||
+            r.description.toLowerCase().includes(lowerQuery) ||
+            r.address.toLowerCase().includes(lowerQuery)) {
+          return true;
+        }
+        // 2. Category match via keywords
+        if (targetCategories.includes(r.category)) {
+          return true;
+        }
+        return false;
+      });
+
+      setResources(filtered);
+      setSummary(filtered.length > 0 
+        ? `Found ${filtered.length} resources matching "${searchQuery}" from our verified directory.` 
+        : `No verified resources found for "${searchQuery}". Try searching for "food", "shelter", or "health".`
+      );
+      
+      if (filtered.length > 0) {
+        setSelectedId(filtered[0].id);
+      }
+      setLoading(false);
+
+      /* 
+      // External API calls disabled for hardcoded mode
       try {
         const result: AIResponse = await searchResourcesWithGemini(
           searchQuery,
@@ -107,6 +181,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
       } finally {
         setLoading(false);
       }
+      */
     },
     [userLocation]
   );
@@ -130,7 +205,8 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
   };
 
   const handleChipClick = (category: string) => {
-    navigate(`/map?q=${encodeURIComponent("Find " + category)}`);
+    // Directly search for the category name to match our hardcoded data
+    navigate(`/map?q=${encodeURIComponent(category)}`);
   };
 
   const handleBack = () => {
@@ -254,6 +330,31 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
             </button>
           </form>
 
+          {/* Manual location setter - in case geolocation is denied */}
+          <div className="mt-3 flex items-center gap-3">
+            <button
+              onClick={() => setShowLocationInput((s) => !s)}
+              className="px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 text-sm text-gray-700"
+            >
+              {showLocationInput ? "Hide location" : "Set my location"}
+            </button>
+
+            {showLocationInput && (
+              <form onSubmit={handleSetManualLocation} className="flex items-center gap-2 flex-1">
+                <input
+                  type="text"
+                  value={manualAddress}
+                  onChange={(e) => setManualAddress(e.target.value)}
+                  placeholder="Enter lat, lng"
+                  className="flex-1 px-2 py-1 rounded-md border text-sm"
+                />
+                <button className="px-3 py-1 rounded-md bg-indigo-500 text-white text-sm whitespace-nowrap">
+                  Update
+                </button>
+              </form>
+            )}
+          </div>
+
           {/* Quick Filters */}
           <div className="flex gap-2 mt-3 overflow-x-auto pb-1 no-scrollbar">
             {["Food", "Shelter", "Health", "Legal"].map((cat) => (
@@ -325,7 +426,7 @@ const ResultsPage: React.FC<ResultsPageProps> = ({ userLocation }) => {
                       darkMode ? "text-gray-200" : "text-blue-900"
                     }`}
                   >
-                    CityAssist AI
+                    6ixAssist AI
                   </h4>
                   <p
                     className={`text-sm leading-relaxed transition-colors duration-300 ${
