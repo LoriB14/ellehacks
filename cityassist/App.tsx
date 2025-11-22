@@ -1,6 +1,7 @@
 import React, { useState, useEffect, createContext } from "react";
 import { Coordinate } from "./types";
 import { DEFAULT_CENTER } from "./constants";
+import LiveLocationService, { LocationUpdate } from "./services/locationService";
 import LandingPage from "./components/LandingPage";
 import ResultsPage from "./components/ResultsPage";
 import CommunityPage from "./components/CommunityPage";
@@ -22,6 +23,9 @@ export const DarkModeContext = createContext<{
 
 const App: React.FC = () => {
   const [userLocation, setUserLocation] = useState<Coordinate>(DEFAULT_CENTER);
+  const [locationAccuracy, setLocationAccuracy] = useState<number>(0);
+  const [neighborhood, setNeighborhood] = useState<string>("Toronto");
+  const [isLocationLive, setIsLocationLive] = useState<boolean>(false);
   const [currentPath, setCurrentPath] = useState(() => {
     // Always start at home page
     const hash = window.location.hash;
@@ -40,55 +44,95 @@ const App: React.FC = () => {
     return saved === "true" ? true : false; // Default to light mode
   });
 
+  const locationService = new LiveLocationService();
+
   useEffect(() => {
     localStorage.setItem("darkMode", darkMode.toString());
   }, [darkMode]);
 
-  // Check location permission on mount
+  // Handle location updates
+  const handleLocationUpdate = async (update: LocationUpdate) => {
+    setUserLocation(update.position);
+    setLocationAccuracy(update.accuracy);
+    setIsLocationLive(true);
+    
+    // Get neighborhood name
+    try {
+      const neighborhoodName = await LiveLocationService.getNeighborhood(
+        update.position.lat, 
+        update.position.lng
+      );
+      setNeighborhood(neighborhoodName);
+    } catch (error) {
+      console.warn('Error getting neighborhood:', error);
+    }
+  };
+
+  // Check location permission and start live tracking
   useEffect(() => {
-    const checkLocationPermission = async () => {
-      if ("permissions" in navigator) {
-        try {
-          const result = await navigator.permissions.query({
-            name: "geolocation",
+    const initializeLocation = async () => {
+      if (!LiveLocationService.isSupported()) {
+        setLocationPermission("denied");
+        return;
+      }
+
+      try {
+        const permission = await LiveLocationService.checkPermission();
+        setLocationPermission(permission);
+
+        if (permission === "granted") {
+          // Get initial position
+          const initialUpdate = await locationService.getCurrentPosition({
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 30000
           });
-          if (result.state === "prompt") {
-            setShowLocationPrompt(true);
-          } else if (result.state === "granted") {
-            setLocationPermission("granted");
-            getUserLocation();
-          } else {
-            setLocationPermission("denied");
-          }
-        } catch {
-          // Fallback if permissions API not supported
+          
+          await handleLocationUpdate(initialUpdate);
+          
+          // Start live tracking
+          locationService.startWatching(handleLocationUpdate, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 60000 // Update every minute
+          });
+          
+          setShowLocationPrompt(false);
+        } else if (permission === "prompt") {
           setShowLocationPrompt(true);
         }
-      } else {
-        setShowLocationPrompt(true);
+      } catch (error) {
+        console.warn("Location initialization failed:", error);
+        setLocationPermission("denied");
       }
     };
 
-    checkLocationPermission();
+    initializeLocation();
+
+    // Cleanup on unmount
+    return () => {
+      locationService.stopWatching(handleLocationUpdate);
+    };
   }, []);
 
-  const getUserLocation = () => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setLocationPermission("granted");
-          setShowLocationPrompt(false);
-        },
-        (error) => {
-          console.warn("Geolocation denied or failed:", error);
-          setLocationPermission("denied");
-          setShowLocationPrompt(false);
-        }
-      );
+  const getUserLocation = async () => {
+    try {
+      const update = await LiveLocationService.requestPermission();
+      setLocationPermission("granted");
+      await handleLocationUpdate(update);
+      
+      // Start live tracking after permission granted
+      locationService.startWatching(handleLocationUpdate, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000
+      });
+      
+      setShowLocationPrompt(false);
+    } catch (error) {
+      console.warn("Geolocation denied or failed:", error);
+      setLocationPermission("denied");
+      setShowLocationPrompt(false);
     }
   };
 
@@ -217,7 +261,12 @@ const App: React.FC = () => {
             ) : isInfoHelp ? (
               <InfoHelpPage />
             ) : (
-              <LandingPage />
+              <LandingPage 
+                userLocation={userLocation}
+                neighborhood={neighborhood}
+                isLocationLive={isLocationLive}
+                locationAccuracy={locationAccuracy}
+              />
             )}
           </div>
         </div>

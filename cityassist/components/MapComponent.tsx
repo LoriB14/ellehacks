@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import L from "leaflet";
 import { Resource, Coordinate } from "../types";
 
@@ -8,6 +8,28 @@ interface MapComponentProps {
   selectedId?: string;
   onSelectResource: (id: string) => void;
 }
+
+// Pre-create icons for better performance
+const createIcon = (color: string, size: number) => L.divIcon({
+  className: "custom-pin",
+  html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full drop-shadow-md"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
+  iconSize: [size, size],
+  iconAnchor: [size / 2, size],
+  popupAnchor: [0, -size],
+});
+
+const DEFAULT_ICON = createIcon("#ef4444", 30);
+const SELECTED_ICON = createIcon("#f59e0b", 40);
+
+const USER_ICON = L.divIcon({
+  className: "user-location-icon",
+  html: `<div class="relative">
+    <div class="w-4 h-4 bg-blue-600 rounded-full border-2 border-white shadow-lg animate-pulse"></div>
+    <div class="absolute top-0 left-0 w-4 h-4 bg-blue-400 rounded-full animate-ping opacity-75"></div>
+  </div>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
 
 const MapComponent: React.FC<MapComponentProps> = ({
   resources,
@@ -34,26 +56,29 @@ const MapComponent: React.FC<MapComponentProps> = ({
       13
     );
 
-    // Use OpenStreetMap tiles that work better offline with browser caching
+    // Fast-loading tile layer optimized for performance
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      maxZoom: 19,
-      // Enable offline support through browser cache
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>',
+      maxZoom: 18,
+      minZoom: 10,
+      // Performance optimizations
       crossOrigin: true,
+      updateWhenIdle: true,
+      updateWhenZooming: false,
+      keepBuffer: 4,
+      // Preload tiles for faster experience
+      detectRetina: true,
+      // Reduce server load and improve caching
+      subdomains: ['a', 'b', 'c'],
     }).addTo(map);
 
-    // Custom User Icon
-    const userIcon = L.divIcon({
-      className: "custom-div-icon",
-      html: "<div style='background-color: #2563eb; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.3);'></div>",
-      iconSize: [20, 20],
-      iconAnchor: [10, 10],
-    });
-
-    L.marker([center.lat, center.lng], { icon: userIcon })
+    // Live user location marker
+    const userMarker = L.marker([center.lat, center.lng], { icon: USER_ICON })
       .addTo(map)
-      .bindPopup("You are here");
+      .bindPopup("📍 Your location");
+    
+    // Store user marker reference for updates
+    (map as any)._userMarker = userMarker;
 
     mapInstanceRef.current = map;
 
@@ -67,13 +92,16 @@ const MapComponent: React.FC<MapComponentProps> = ({
   }, []);
   // We only want to init once. Updates are handled below.
 
-  // Update Center
+  // Update Center and User Location
   useEffect(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.flyTo([center.lat, center.lng], 13);
-      // Update user marker position (assuming the first marker added is user)
-      // Simplification for MVP: Just re-rendering logic is complex without React-Leaflet,
-      // so we focus on resource markers updating.
+      
+      // Update user marker position
+      const userMarker = (mapInstanceRef.current as any)._userMarker;
+      if (userMarker) {
+        userMarker.setLatLng([center.lat, center.lng]);
+      }
     }
   }, [center]);
 
@@ -89,24 +117,20 @@ const MapComponent: React.FC<MapComponentProps> = ({
     );
     markersRef.current = {};
 
-    // Add new markers
+    // Add new markers with performance optimization
     resources.forEach((res) => {
       const isSelected = res.id === selectedId;
+      const icon = isSelected ? SELECTED_ICON : DEFAULT_ICON;
 
-      const color = isSelected ? "#f59e0b" : "#ef4444";
-      const size = isSelected ? 40 : 30;
-
-      const customIcon = L.divIcon({
-        className: "custom-pin",
-        html: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full drop-shadow-md"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>`,
-        iconSize: [size, size],
-        iconAnchor: [size / 2, size],
-        popupAnchor: [0, -size],
-      });
-
-      const marker = L.marker([res.lat, res.lng], { icon: customIcon })
+      const marker = L.marker([res.lat, res.lng], { icon })
         .addTo(map)
-        .bindPopup(`<b>${res.name}</b><br/>${res.category}`);
+        .bindPopup(`
+          <div class="p-2">
+            <div class="font-semibold text-sm">${res.name}</div>
+            <div class="text-xs text-gray-600">${res.category}</div>
+            <div class="text-xs text-gray-500 mt-1">${res.address}</div>
+          </div>
+        `);
 
       marker.on("click", () => {
         onSelectResource(res.id);

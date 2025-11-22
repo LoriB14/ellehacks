@@ -258,7 +258,7 @@ const SideNav: React.FC<SideNavProps> = ({ currentPath }) => {
               <div className="flex items-center justify-between">
                 <button
                   onClick={() => navigate("/")}
-                  className="flex items-center gap-3 transition-all duration-200 ease-out hover:opacity-80 active:scale-95"
+                  className="flex items-center gap-3"
                 >
                   <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0 transition-all duration-300 ease-out">
                     <span className="text-white font-bold text-xl transition-all duration-300 ease-out">

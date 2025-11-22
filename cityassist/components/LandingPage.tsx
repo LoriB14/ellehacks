@@ -1,13 +1,26 @@
 import React, { useState, useEffect, useContext } from "react";
 import { DarkModeContext } from "../App";
 import { fetchTorontoStats, TorontoOpenDataStats } from "../services/torontoDataService";
+import { Coordinate } from "../types";
 
 interface WeatherData {
   temp: number;
   condition: string;
 }
 
-const LandingPage: React.FC = () => {
+interface LandingPageProps {
+  userLocation: Coordinate;
+  neighborhood: string;
+  isLocationLive: boolean;
+  locationAccuracy: number;
+}
+
+const LandingPage: React.FC<LandingPageProps> = ({
+  userLocation,
+  neighborhood,
+  isLocationLive,
+  locationAccuracy
+}) => {
   const [query, setQuery] = useState("");
   const [weather, setWeather] = useState<WeatherData>({
     temp: -3,
@@ -293,6 +306,27 @@ const LandingPage: React.FC = () => {
             Free resources for food, shelter, healthcare, and support. No
             barriers. No judgment.
           </p>
+          
+          {/* Live Location Status */}
+          {isLocationLive && (
+            <div className="flex items-center justify-center gap-2 mt-4">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className={`text-sm font-medium ${
+                  darkMode ? "text-green-300" : "text-green-700"
+                }`}>
+                  📍 Live in {neighborhood}
+                </span>
+                {locationAccuracy < 100 && (
+                  <span className={`text-xs ${
+                    darkMode ? "text-green-400" : "text-green-600"
+                  }`}>
+                    (±{Math.round(locationAccuracy)}m)
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Main Search */}
